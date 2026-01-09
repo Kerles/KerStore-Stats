@@ -1,4 +1,5 @@
-import fetch from "node-fetch";
+// import fetch from "node-fetch"
+
 
 const UPSTASH_URL = process.env.UPSTASH_REST_URL?.replace(/\/$/, "");
 const UPSTASH_TOKEN = process.env.UPSTASH_REST_TOKEN;
