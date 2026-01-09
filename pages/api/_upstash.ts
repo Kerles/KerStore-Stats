@@ -9,7 +9,7 @@ if (!UPSTASH_URL || !UPSTASH_TOKEN) {
 export async function upstashCommand(command: string[]) {
   console.log('upstashCommand — UPSTASH_URL set?', !!UPSTASH_URL)
 
-  const res = await fetch(UPSTASH_URL, {
+  const res = await fetch(UPSTASH_URL as string, {
     method: 'POST',
     headers: {
       Authorization: `Bearer ${UPSTASH_TOKEN}`,
