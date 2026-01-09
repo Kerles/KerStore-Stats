@@ -1,14 +1,4 @@
-// import fetch from "node-fetch"
-
-
-const UPSTASH_URL = process.env.UPSTASH_REST_URL?.replace(/\/$/, "");
-const UPSTASH_TOKEN = process.env.UPSTASH_REST_TOKEN;
-
-if (!UPSTASH_URL || !UPSTASH_TOKEN) {
-  console.error("Missing UPSTASH_REST_URL or UPSTASH_REST_TOKEN env vars");
-}
-
-async function upstashCmd(cmdArray) {
+async function upstashCmd(cmdArray: (string | number)[]): Promise<any> {
   const res = await fetch(`${UPSTASH_URL}/rest`, {
     method: "POST",
     headers: {
@@ -17,30 +7,6 @@ async function upstashCmd(cmdArray) {
     },
     body: JSON.stringify({ cmd: cmdArray }),
   });
-  const json = await res.json();
-  if (!res.ok) throw new Error(JSON.stringify(json));
-  return json;
-}
-
-export default async function handler(req, res) {
-  try {
-    
-    const scanRes = await upstashCmd(["SCAN", "0", "MATCH", "stats:*", "COUNT", "1000"]);
-    
-    const cursor = scanRes.result?.[0] ?? "0";
-    const keys = scanRes.result?.[1] ?? scanRes?.result ?? [];
-
-    
-    const data = {};
-    if (keys.length > 0) {
-      const mgetRes = await upstashCmd(["MGET", ...keys]);
-      const values = mgetRes.result ?? mgetRes;
-      keys.forEach((k, i) => (data[k] = values[i]));
-    }
-
-    res.status(200).json({ ok: true, data });
-  } catch (err) {
-    console.error("API /api/stats error:", err);
-    res.status(500).json({ ok: false, error: "Failed to fetch stats" });
-  }
+  if (!res.ok) throw new Error(`Upstash error ${res.status}`);
+  return res.json();
 }
