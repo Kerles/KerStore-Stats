@@ -1,23 +1,45 @@
-import type { NextApiRequest, NextApiResponse } from 'next'
-import { upstashCommand } from './_upstash'
+import fetch from "node-fetch";
 
-type DayItem = { date: string; count: number }
+const UPSTASH_URL = process.env.UPSTASH_REST_URL?.replace(/\/$/, "");
+const UPSTASH_TOKEN = process.env.UPSTASH_REST_TOKEN;
 
-export default async function handler(req: NextApiRequest, res: NextApiResponse) {
+if (!UPSTASH_URL || !UPSTASH_TOKEN) {
+  console.error("Missing UPSTASH_REST_URL or UPSTASH_REST_TOKEN env vars");
+}
+
+async function upstashCmd(cmdArray) {
+  const res = await fetch(`${UPSTASH_URL}/rest`, {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${UPSTASH_TOKEN}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ cmd: cmdArray }),
+  });
+  const json = await res.json();
+  if (!res.ok) throw new Error(JSON.stringify(json));
+  return json;
+}
+
+export default async function handler(req, res) {
   try {
-    const totalRes = await upstashCommand(['GET', 'site:visits:total'])
-    const total = Number(totalRes.result ?? 0)
+    
+    const scanRes = await upstashCmd(["SCAN", "0", "MATCH", "stats:*", "COUNT", "1000"]);
+    
+    const cursor = scanRes.result?.[0] ?? "0";
+    const keys = scanRes.result?.[1] ?? scanRes?.result ?? [];
 
-    const days: DayItem[] = []
-    for (let i = 6; i >= 0; i--) {
-      const d = new Date(Date.now() - i * 86400000).toISOString().slice(0, 10)
-      const r = await upstashCommand(['GET', `site:visits:day:${d}`])
-      days.push({ date: d, count: Number(r.result ?? 0) })
+    
+    const data = {};
+    if (keys.length > 0) {
+      const mgetRes = await upstashCmd(["MGET", ...keys]);
+      const values = mgetRes.result ?? mgetRes;
+      keys.forEach((k, i) => (data[k] = values[i]));
     }
 
-    return res.status(200).json({ total, days })
+    res.status(200).json({ ok: true, data });
   } catch (err) {
-    console.error(err)
-    return res.status(500).json({ error: 'failed to read from Upstash' })
+    console.error("API /api/stats error:", err);
+    res.status(500).json({ ok: false, error: "Failed to fetch stats" });
   }
 }
