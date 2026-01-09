@@ -1,3 +1,10 @@
+const UPSTASH_URL = process.env.UPSTASH_REST_URL?.replace(/\/$/, "") ?? "";
+const UPSTASH_TOKEN = process.env.UPSTASH_REST_TOKEN ?? "";
+if (!UPSTASH_URL || !UPSTASH_TOKEN) {
+  console.error("Missing UPSTASH_REST_URL or UPSTASH_REST_TOKEN env vars");
+}
+
+
 async function upstashCmd(cmdArray: (string | number)[]): Promise<any> {
   const res = await fetch(`${UPSTASH_URL}/rest`, {
     method: "POST",
