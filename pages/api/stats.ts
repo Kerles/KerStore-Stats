@@ -2,11 +2,12 @@
 import { NextApiRequest, NextApiResponse } from 'next';
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
-  const upstashUrl = process.env.UPSTASH_REDIS_REST_URL;
-  const upstashToken = process.env.UPSTASH_REDIS_REST_TOKEN;
+  
+  const upstashUrl = process.env.KV_URL; 
+  const upstashToken = process.env.KV_REST_API_READ_ONLY_TOKEN; 
 
   if (!upstashUrl || !upstashToken) {
-    console.error("Missing UPSTASH_REDIS_REST_URL or UPSTASH_REDIS_REST_TOKEN env vars");
+    console.error("Missing KV_URL or KV_REST_API_READ_ONLY_TOKEN env vars");
     return res.status(500).json({ error: "Server misconfiguration" });
   }
 
@@ -18,14 +19,15 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       },
     });
 
+   
     if (!response.ok) {
       throw new Error(`Failed to fetch from Upstash: ${response.status}`);
     }
 
     const data = await response.json();
-    return res.status(200).json(data); 
+    return res.status(200).json(data);
   } catch (error) {
-    console.error('Error fetching stats:', error);
+    console.error('Error fetching stats:', error.message);
     return res.status(500).json({ error: error.message });
   }
 }
