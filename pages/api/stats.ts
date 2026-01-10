@@ -1,8 +1,6 @@
-// pages/api/stats.ts
 import { NextApiRequest, NextApiResponse } from 'next';
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
-
   const upstashUrl = process.env.UPSTASH_REDIS_REST_URL;
   const upstashToken = process.env.UPSTASH_REDIS_REST_TOKEN;
 
@@ -26,7 +24,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     const data = await response.json();
     return res.status(200).json(data);
   } catch (error) {
-    console.error('Error fetching stats:', error);
-    return res.status(500).json({ error: error.message });
+    // Type Assertion
+    const errorMessage = (error as Error).message || 'Unknown error';
+    console.error('Error fetching stats:', errorMessage);
+    return res.status(500).json({ error: errorMessage });
   }
 }
