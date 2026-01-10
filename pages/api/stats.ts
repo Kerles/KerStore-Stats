@@ -2,10 +2,9 @@
 import { NextApiRequest, NextApiResponse } from 'next';
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
-  const upstashUrl = process.env.KV_URL; 
+  const upstashUrl = process.env.KV_URL;
   const upstashToken = process.env.KV_REST_API_READ_ONLY_TOKEN;
 
-  
   if (!upstashUrl || !upstashToken) {
     console.error("Missing KV_URL or KV_REST_API_READ_ONLY_TOKEN env vars");
     return res.status(500).json({ error: "Server misconfiguration" });
@@ -13,9 +12,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
   try {
     const response = await fetch(upstashUrl, {
-      method: 'GET',
+      method: 'GET', 
       headers: {
-        'Authorization': `Bearer ${upstashToken}`, 
+        'Authorization': `Bearer ${upstashToken}`,
       },
     });
 
